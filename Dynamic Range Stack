@@ -1,0 +1,258 @@
+/*****************************************
+ * Instructions
+ *  - Replace 'uwuserid' with your uWaterloo User ID
+ *  - Select the current calendar term and enter the year
+ *  - List students with whom you had discussions and who helped you
+ *
+ * uWaterloo User ID:  rapatil @uwaterloo.ca
+ * Submitted for ECE 250
+ * Department of Electrical and Computer Engineering
+ * University of Waterloo
+ * Calender Term of Submission:  (Winter) 2019
+ *
+ * By submitting this file, I affirm that
+ * I am the author of all modifications to
+ * the provided code.
+ *
+ * The following is a list of uWaterloo User IDs of those students
+ * I had discussions with in preparing this project:
+ *    -
+ *
+ * The following is a list of uWaterloo User IDs of those students
+ * who helped me with this project (describe their help; e.g., debugging): sjradulo - debugging
+ *    -
+ *****************************************/
+
+#ifndef DYNAMIC_STACK_AS_ARRAY_H
+#define DYNAMIC_STACK_AS_ARRAY_H
+
+#ifndef nullptr
+#define nullptr 0
+#endif
+
+#include <algorithm>
+#include "Exception.h"
+
+class Dynamic_range_stack {
+	private:
+		int entry_count;
+		int max_count;
+		int min_count;
+		int initial_capacity;
+		int current_capacity;
+
+		int *stack_array;
+		int *maximum_array;
+		int *minimum_array;
+
+		// You may wish to include a number of helper functions
+		// in order to abstract out some operations
+
+
+	public:
+		Dynamic_range_stack( int = 10 );
+		~Dynamic_range_stack();
+
+		int top() const;
+		int size() const;
+		bool empty() const;
+		int capacity() const;
+
+		int maximum() const;
+		int minimum() const;
+
+		
+		void push( int const & );
+		int pop();
+		void clear();
+
+
+	// Friends
+
+	friend std::ostream &operator<<( std::ostream &, Dynamic_range_stack const & );
+};
+
+Dynamic_range_stack::Dynamic_range_stack( int n ):
+entry_count( 0 ),
+min_count( 0 ),
+max_count( 0 ),
+initial_capacity( std::max( 1, n ) ),
+current_capacity( initial_capacity ),
+stack_array( new int[current_capacity] ),
+maximum_array( new int[current_capacity] ),
+minimum_array( new int[current_capacity] ) {
+	// empty constructor
+}
+
+Dynamic_range_stack::~Dynamic_range_stack() {
+	// Enter your implementation here.												DECONSTRUCTOR -worked on 
+	entry_count = 0; 
+	min_count = 0; 
+	max_count = 0; 
+	initial_capacity = 0; 
+	current_capacity = 0; 
+	delete[] stack_array; 
+	delete[] maximum_array;
+	delete[] minimum_array; 
+
+}
+
+int Dynamic_range_stack::top() const {
+	// Enter your implementation here.												TOP -worked on 
+	if(entry_count <= 0){
+		throw underflow(); 
+	}
+	return stack_array[entry_count-1];
+}
+
+int Dynamic_range_stack::maximum() const {
+	// Enter your implementation here.
+	if(max_count <= 0){
+		throw underflow(); 
+	}
+	return maximum_array[max_count-1];
+}
+
+int Dynamic_range_stack::minimum() const {
+	// Enter your implementation here.												MINIMUM -worked on 
+	if(min_count <= 0){
+		throw underflow(); 
+	}
+	return minimum_array[min_count-1];
+}
+
+int Dynamic_range_stack::size() const {
+	// Enter your implementation here.												SIZE -worked on 
+	return entry_count;
+}
+
+bool Dynamic_range_stack::empty() const {
+	// Enter your implementation here.												EMPTY -worked on 
+	bool isitempty = false; 
+	// What do I do for negative size? 
+	if(entry_count == 0) {
+		isitempty = true; 
+	}
+	else if(entry_count) {
+		isitempty = false; 
+	}
+	
+	return isitempty;
+}
+
+int Dynamic_range_stack::capacity() const {
+	// Enter your implementation here.												CAPACITY -worked on 
+	return current_capacity;
+}
+
+
+
+void Dynamic_range_stack::push( int const &obj ) {
+	// Enter your implementation here.												PUSH -worked on
+	//WHAT if entry count is > current_capacity
+	// double the array
+	if(entry_count == current_capacity)
+	{
+		current_capacity = current_capacity * 2; //arrays are to be doubled for dynamic size change 
+		
+		//Save old data in temporary stacks 
+		int *tempStack = new int[current_capacity]; 
+		int *tempMax = new int[current_capacity];
+		int *tempMin = new int[current_capacity];
+
+		for (int i = 0; i < current_capacity; i++) 
+		{
+			tempStack[i] = stack_array[i];  
+			tempMax[i] = maximum_array[i];
+			tempMin[i] = minimum_array[i];
+		} 
+		
+		//Remove original stacks with smaller capacity
+		delete[] stack_array;
+		delete[] maximum_array;
+		delete[] minimum_array;
+		
+		//Add old data, change the size (double) of original stacks 
+		stack_array = tempStack; 
+		maximum_array = tempMax; 
+		minimum_array = tempMin; 
+	} 
+	//Add obj to top of stack 
+	stack_array[entry_count] = obj; 
+	entry_count++;
+	
+	//Add to array of max's 
+	if((entry_count == 1)) //First item in stack 
+	{ 
+		maximum_array[max_count] = obj; 
+	}
+	else if((obj > maximum()) && (entry_count != 1)) //new max 
+	{ 
+		maximum_array[max_count] = obj; 
+	}
+	else if(obj <= maximum()) //keep old max
+	{
+		maximum_array[max_count] = maximum(); 
+	}
+	max_count++; 
+	 
+	 //Add to array of min's 
+	if((entry_count == 1)) //First item in stack 
+	{ 
+		minimum_array[min_count] = obj; 
+	}
+	else if((obj < minimum()) && (entry_count != 1)) //new min 
+	{ 
+		minimum_array[min_count] = obj; 
+	}
+	else if(obj >= minimum()) //keep old min
+	{
+		minimum_array[min_count] = minimum(); 
+	}
+	min_count++; 
+	
+	return;
+}
+
+int Dynamic_range_stack::pop() {
+	// Enter your implementation here.												POP -worked on it 
+	//UNDERFLOW
+	if(entry_count <= 0){
+		throw underflow(); 
+	}
+	int popped = stack_array[entry_count-1]; 
+	stack_array[entry_count-1] = nullptr; 
+	entry_count--; 
+	maximum_array[max_count-1] = nullptr; 
+	max_count--; 
+	minimum_array[min_count-1] = nullptr; 
+	min_count--; 
+	return popped;
+}
+
+void Dynamic_range_stack::clear() {
+	// Enter your implementation here.												CLEAR -worked on it 
+	delete[] stack_array;
+	delete[] maximum_array;
+	delete[] minimum_array;
+	int *stack_array = new int[initial_capacity]; 
+	int *maximum_array = new int[initial_capacity];
+	int *minimum_array = new int[initial_capacity];
+	current_capacity = initial_capacity; 
+	entry_count = 0; 
+	max_count = 0; 
+	min_count = 0; 
+}
+
+// You can modify this function however you want:  it will not be tested
+
+std::ostream &operator<<( std::ostream &out, Dynamic_range_stack const &stack ) {
+	// Print out your stacks
+
+	return out;
+}
+
+// Is an error showing up in ece250.h or elsewhere?
+// Did you forget a closing '}' ?
+
+#endif
